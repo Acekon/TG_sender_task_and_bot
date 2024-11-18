@@ -71,7 +71,7 @@ async def command_get_id(message: Message, state: FSMContext):
 
 @router.message(FormGetId.mess_id)
 @auth_admin
-async def process_mess_get(message: Message, state: FSMContext):
+async def process_mess_get(message: Message, state: FSMContext):  # todo in v0.4.1, add manual send
     await state.update_data(name=message.text)
     message_text = get_message_id(message.text)
     if not message_text:
@@ -130,7 +130,7 @@ async def command_remove_message_img(callback_query: CallbackQuery):
 
 @router.callback_query(lambda c: c.data and c.data.startswith('edit_image_list:'))
 @auth_admin
-async def command_edit_image_list(callback_query: CallbackQuery):
+async def command_edit_image_list(callback_query: CallbackQuery):  # todo in v0.4.1, add change flag sending
     id_message = callback_query.data.split(':')[-1]
     path_collage, images_name = get_collage(id_message, type_collage='vertical')
     kb = []
