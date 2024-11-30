@@ -55,7 +55,7 @@ def create_image_collage(image_paths):
 
 
 def create_vertical_collage(image_paths):
-    width = 300
+    width = 600
     random_prefix_file = ''.join(random.choice(string.ascii_letters) for _ in range(6))
     output_path = f'{full_path_img_dir}collage_{random_prefix_file}.png'
     image_size = (200, 200)
@@ -72,13 +72,13 @@ def create_vertical_collage(image_paths):
         image = image.resize(image_size)
         collage.paste(image, (0, i * image_size[1]))
         draw = ImageDraw.Draw(collage)
-        text_x = image_size[0] + 10
+        text_x = image_size[0] + 55
         text_y = i * image_size[1] + image_size[1] // 2
         text_color = (0, 0, 0)
         font = ImageFont.truetype("arial.ttf", 20)
         draw.text((text_x, text_y), img_name, fill=text_color, font=font)
     collage.save(output_path)
-    return output_path, images_name
+    return output_path
 
 
 def download_img(file_id, bot_token, mess_id):
@@ -246,7 +246,10 @@ def img_journal_is_send_json_file(json_file_mess_id, image_name):
         current_image_list = images_list.get(image_id)
         for image in current_image_list:
             if image_name == image['file_name']:
-                image['file_send'] = 1
+                if image['file_send'] == 0:
+                    image['file_send'] = 1
+                else:
+                    image['file_send'] = 0
             new_image_list.append(image)
         with open(file_path, 'w', encoding='UTF-8') as file_write:
             images_list[image_id] = new_image_list
