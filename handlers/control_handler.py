@@ -90,7 +90,7 @@ It will display information about the number of messages,
 - You also have the option to reset sending status if needed.
 
 <b>8. Admin control panel:</b>
-- The Admin Control Panel allows you to manage administrators and change the publication schedule using the `/control` command.
+- The Admin Control Panel allows you to manage administrators and change the publication schedule using the `/control`.
 - You can add new administrators, remove existing ones, and configure the timing of messages.
 
 <b>9. Starting the Bot:</b>

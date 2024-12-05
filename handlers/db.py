@@ -4,7 +4,7 @@ from conf import db_path
 from handlers.logger_setup import logger
 
 
-def check_last_sent_status():
+def check_last_sent_status() -> tuple:
     conn = sqlite3.connect(db_path())
     c = conn.cursor()
     c.execute(f'SELECT COUNT(ids) as total,'
@@ -17,7 +17,7 @@ def check_last_sent_status():
     return lats_sent
 
 
-def mess_reset():
+def mess_reset() -> str:
     try:
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
@@ -34,17 +34,18 @@ def search_mess(mess_text):
     try:
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
-        c.execute(f'SELECT ids, text_message FROM messages WHERE text_message like "%{mess_text}%"')
+        sql = f'SELECT ids, text_message FROM messages WHERE text_message like "%{mess_text}%"'
+        c.execute(sql)
         messages = c.fetchall()
         conn.commit()
         conn.close()
         if not messages:
             logger.error(f"Not found")
-            return ["Not found"]
+            return [("", "Message: Not found")]
         return messages
     except sqlite3.OperationalError as err:
         logger.error(f"Error: {err}")
-        return [f"Error: {err}"]
+        return [("", f"Error: {err}")]
 
 
 def get_message_id(mess_id):
