@@ -93,7 +93,7 @@ def download_img(file_id, bot_token, mess_id=None):
         return f"File {mess_id}_{random_prefix_file}.png is uploads"
     else:
         random_prefix_file = ''.join(random.choice(string.ascii_letters) for _ in range(12))
-        image_file = f"{full_path_img_dir}0_{random_prefix_file}.png"
+        image_file = f"{full_path_img_dir}_{random_prefix_file}.png"
         with open(image_file, 'wb') as f:
             f.write(response_img.content)
         return {"image_file": image_file, "file_name": random_prefix_file}
@@ -167,7 +167,7 @@ def img_journal_create_json_file(images: Tuple[str, list]) -> None:
 
 
 def img_journal_generate_json_file(mess_id):
-    """Find all images for message_id in folder"""
+    """Find all images for message_id in the folder"""
     files_name = []
     images_list = {}
     current_id = ''

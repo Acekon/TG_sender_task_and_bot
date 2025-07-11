@@ -1,3 +1,4 @@
+import os
 import time
 
 from aiogram import Router, types
@@ -10,7 +11,7 @@ from ai_mess_task import send_manual_message
 from handlers.db import search_mess, get_message_id, add_message, remove_message, message_enable, message_disable, \
     message_update_text
 from handlers.img import get_collage, download_img, remove_img, remove_all_img, img_journal_create_json_file, \
-    img_journal_get_image_list, img_journal_is_send_json_file
+    img_journal_get_image_list, img_journal_is_send_json_file, full_path_img_dir, img_journal_generate_json_file
 from conf import bot_token
 from handlers.logger_setup import logger
 from handlers.service import auth_admin
@@ -271,6 +272,9 @@ async def process_mess_add_img(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
     if message.content_type == 'photo' and FormGetIdImg.mess_text is not None:
         file_id = message.photo[-1].file_id
+        json_file_path = f"{full_path_img_dir}{file_id}.json"
+        if not os.path.exists(json_file_path):
+            img_journal_generate_json_file(mess_id=file_id)
         result = download_img(bot_token=bot_token, file_id=file_id, mess_id=FormGetIdImg.mess_text)
         await message.answer(f"{result}")
     else:
