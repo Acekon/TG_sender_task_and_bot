@@ -270,8 +270,11 @@ def img_journal_get_image_list(json_file_mess_id):
     full_path_image_list = []
     image_data = {'file_name': '', 'file_send': ''}
     if not os.path.isfile(file_path):
-        logger.error(f"File not found: ({file_path})")
-        return False
+        logger.info(f"File not found: ({file_path}) Try creating a new one")
+        img_journal_generate_json_file(json_file_mess_id)
+        if not os.path.isfile(file_path):
+            logger.error(f"File not found: ({file_path})")
+            return False
     with open(file_path, 'r', encoding='UTF-8') as file:
         images_list = json.load(file)
         for image in images_list.get(str(json_file_mess_id)):

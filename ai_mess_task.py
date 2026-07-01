@@ -19,7 +19,7 @@ def send_photo(file_path, caption, send_to):
         logger.info(f'Try sending photo')
         img = {'photo': ('_', img_file, 'image/jpeg')}
         url = f'https://api.telegram.org/bot{bot_token}/sendPhoto?chat_id={send_to}&caption={caption}'
-        response = requests.post(url, files=img)
+        response = requests.post(url, files=img, timeout=10)
         logger.info(response.json())
         return response.text
 
@@ -27,7 +27,7 @@ def send_photo(file_path, caption, send_to):
 def send_text(message_text, send_to):
     logger.info(f'Try sending text')
     url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
-    response = requests.post(url, json={'chat_id': send_to, 'parse_mode': 'html', 'text': message_text})
+    response = requests.post(url, json={'chat_id': send_to, 'parse_mode': 'html', 'text': message_text}, timeout=10)
     logger.info(response.json())
     return response.text
 
