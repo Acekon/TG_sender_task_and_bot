@@ -81,15 +81,23 @@ def create_vertical_collage(image_paths):
     return output_path
 
 
-def download_img(file_id, bot_token, mess_id):
+def download_img(file_id, bot_token, mess_id=None):
     file_info = requests.get(f'https://api.telegram.org/bot{bot_token}/getFile?file_id={file_id}')
     file_path = file_info.json()['result']['file_path']
     response_img = requests.get(f'https://api.telegram.org/file/bot{bot_token}/{file_path}')
-    random_prefix_file = ''.join(random.choice(string.ascii_letters) for _ in range(6))
-    with open(f"img/{mess_id}_{random_prefix_file}.png", 'wb') as f:
-        f.write(response_img.content)
-        img_journal_append_json_file(json_file_mess_id=mess_id, new_image_name=f"{mess_id}_{random_prefix_file}.png")
-    return f"File {mess_id}_{random_prefix_file}.png is uploads"
+    if mess_id:
+        random_prefix_file = ''.join(random.choice(string.ascii_letters) for _ in range(6))
+        with open(f"img/{mess_id}_{random_prefix_file}.png", 'wb') as f:
+            f.write(response_img.content)
+            img_journal_append_json_file(json_file_mess_id=mess_id,
+                                         new_image_name=f"{mess_id}_{random_prefix_file}.png")
+        return f"File {mess_id}_{random_prefix_file}.png is uploads"
+    else:
+        random_prefix_file = ''.join(random.choice(string.ascii_letters) for _ in range(12))
+        image_file = f"{full_path_img_dir}_{random_prefix_file}.png"
+        with open(image_file, 'wb') as f:
+            f.write(response_img.content)
+        return {"image_file": image_file, "file_name": random_prefix_file}
 
 
 def remove_img(img_path, img_name=None):
@@ -144,7 +152,7 @@ def img_journal_remove_img_json_file(json_file_mess_id):
 
 
 def img_journal_create_json_file(images: Tuple[str, list]) -> None:
-    """Create json file to list images"""
+    """Create JSON file to list images"""
     file_data = {}
     result_files_list = []
     file_list = images[1]
@@ -160,7 +168,7 @@ def img_journal_create_json_file(images: Tuple[str, list]) -> None:
 
 
 def img_journal_generate_json_file(mess_id):
-    """Find all images for message_id in folder"""
+    """Find all images for message_id in the folder"""
     files_name = []
     images_list = {}
     current_id = ''
@@ -206,7 +214,7 @@ def img_journal_append_json_file(json_file_mess_id, new_image_name):
 
 
 def img_journal_pop_json_file(json_file_mess_id, pop_image_name):
-    """Pop images from json file"""
+    """Pop images from JSON file"""
     logger.info(f'Try to pop image ({pop_image_name}) from json ({json_file_mess_id}.json)')
     file_path = os.path.join(full_path_img_dir, f"{json_file_mess_id}.json")
     if not os.path.isfile(file_path):
@@ -231,7 +239,7 @@ def img_journal_pop_json_file(json_file_mess_id, pop_image_name):
 
 
 def img_journal_is_send_json_file(json_file_mess_id, image_name):
-    """Marked is send image on json file"""
+    """Marked is send image on JSON file"""
     file_path = os.path.join(full_path_img_dir, f"{json_file_mess_id}.json")
     if str(json_file_mess_id).split('.')[0] != image_name.split('_')[0]:
         logger.error(f"File ({json_file_mess_id}) not equal to image ({image_name})")
@@ -262,8 +270,11 @@ def img_journal_get_image_list(json_file_mess_id):
     full_path_image_list = []
     image_data = {'file_name': '', 'file_send': ''}
     if not os.path.isfile(file_path):
-        logger.error(f"File not found: ({file_path})")
-        return False
+        logger.info(f"File not found: ({file_path}) Try creating a new one")
+        img_journal_generate_json_file(json_file_mess_id)
+        if not os.path.isfile(file_path):
+            logger.error(f"File not found: ({file_path})")
+            return False
     with open(file_path, 'r', encoding='UTF-8') as file:
         images_list = json.load(file)
         for image in images_list.get(str(json_file_mess_id)):

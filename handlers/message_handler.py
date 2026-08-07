@@ -1,3 +1,4 @@
+import os
 import time
 
 from aiogram import Router, types
@@ -10,7 +11,7 @@ from ai_mess_task import send_manual_message
 from handlers.db import search_mess, get_message_id, add_message, remove_message, message_enable, message_disable, \
     message_update_text
 from handlers.img import get_collage, download_img, remove_img, remove_all_img, img_journal_create_json_file, \
-    img_journal_get_image_list, img_journal_is_send_json_file
+    img_journal_get_image_list, img_journal_is_send_json_file, full_path_img_dir, img_journal_generate_json_file
 from conf import bot_token
 from handlers.logger_setup import logger
 from handlers.service import auth_admin
@@ -20,6 +21,10 @@ router = Router()
 
 class FormSearchText(StatesGroup):
     mess_search_text = State()
+
+
+class FormSendText(StatesGroup):
+    mess_send_text = State()
 
 
 class FormGetId(StatesGroup):
@@ -267,12 +272,44 @@ async def process_mess_add_img(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
     if message.content_type == 'photo' and FormGetIdImg.mess_text is not None:
         file_id = message.photo[-1].file_id
+        json_file_path = f"{full_path_img_dir}{file_id}.json"
+        if not os.path.exists(json_file_path):
+            img_journal_generate_json_file(mess_id=file_id)
         result = download_img(bot_token=bot_token, file_id=file_id, mess_id=FormGetIdImg.mess_text)
         await message.answer(f"{result}")
     else:
         logger.error(f"Err: You not enter ID message")
         await message.answer("⚠ You not enter ID message")
     return await state.clear()
+
+
+@router.message(Command(commands=['send_now']))
+@auth_admin
+async def command_send_now(message: Message, state: FSMContext):
+    kb = [[types.InlineKeyboardButton(text="Cancel", callback_data='clear_sate')]]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    await state.set_state(FormSendText.mess_send_text)
+    await message.answer(f"Enter string for preview", reply_markup=keyboard)
+
+
+@router.message(FormSendText.mess_send_text)
+@auth_admin
+async def process_mess_send_now(message: Message, state: FSMContext) -> Message:
+    kb = [[types.InlineKeyboardButton(text="Send", callback_data='send_now:'),
+           types.InlineKeyboardButton(text="Cancel", callback_data='clear_sate')]]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    if message.content_type == 'photo':
+        file_id = message.photo[-1].file_id
+        message_text = message.caption
+        image = download_img(bot_token=bot_token, file_id=file_id)
+        await message.answer_photo(FSInputFile(image), caption=message_text, reply_markup=keyboard)
+    elif message.content_type == 'text':
+        message_text = message.text
+        await message.answer(f"Preview:\n{message_text}", reply_markup=keyboard)
+    else:
+        await state.clear()
+        return await message.answer('⚠ Error type message')
+    await state.update_data(name=message_text)
 
 
 @router.callback_query(lambda c: c.data == 'clear_keyboard')
@@ -289,3 +326,5 @@ async def process_clear_sate(callback_query: CallbackQuery, state: FSMContext):
     await callback_query.message.delete()
     await state.clear()
     await callback_query.message.answer('Canceled')
+
+
